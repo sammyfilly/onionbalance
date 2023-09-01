@@ -67,11 +67,7 @@ class ConfigGenerator(object):
             self.master_dir = self.output_path
 
         # Allow the creation of multiple services for v3
-        if self.hs_version == "v3":
-            n_services = self.get_num_services()
-        else:
-            n_services = 1 # for v2
-
+        n_services = self.get_num_services() if self.hs_version == "v3" else 1
         # Gather information for each service
         for i, _ in enumerate(range(n_services), start=1):
             # Load or generate the master key
@@ -114,8 +110,9 @@ class ConfigGenerator(object):
         """
         output_path = None
         if self.interactive:
-            output_path = input("Enter path to store generated config "
-                                "[{}]: ".format(os.path.abspath(self.args.output)))
+            output_path = input(
+                f"Enter path to store generated config [{os.path.abspath(self.args.output)}]: "
+            )
         output_path = output_path or self.args.output
         try:
             util.try_make_dir(output_path)
@@ -224,19 +221,18 @@ class ConfigGenerator(object):
         return master_private_key, master_onion_address
 
     def load_v3_master_key(self, master_key_path):
-        if master_key_path: # load key from file
+        if master_key_path:
             # here we need to make many of these
             return self._load_v3_master_key_from_file(master_key_path)
-        else: # generate new v3 key
-            master_private_key = Ed25519PrivateKey.generate()
-            master_public_key = master_private_key.public_key()
-            master_pub_key_bytes = master_public_key.public_bytes(encoding=serialization.Encoding.Raw,
-                                                                  format=serialization.PublicFormat.Raw)
-            master_onion_address = HiddenServiceDescriptorV3.address_from_identity_key(master_pub_key_bytes)
-            # cut out the onion since that's what the rest of the code expects
-            master_onion_address = master_onion_address.replace(".onion", "")
+        master_private_key = Ed25519PrivateKey.generate()
+        master_public_key = master_private_key.public_key()
+        master_pub_key_bytes = master_public_key.public_bytes(encoding=serialization.Encoding.Raw,
+                                                              format=serialization.PublicFormat.Raw)
+        master_onion_address = HiddenServiceDescriptorV3.address_from_identity_key(master_pub_key_bytes)
+        # cut out the onion since that's what the rest of the code expects
+        master_onion_address = master_onion_address.replace(".onion", "")
 
-            return master_private_key, master_onion_address
+        return master_private_key, master_onion_address
 
     def load_v2_master_key(self, master_key_path):
         if master_key_path:
@@ -308,24 +304,22 @@ class ConfigGenerator(object):
         """
         service_virtual_port = None
         if self.interactive:
-            service_virtual_port = input("Specify the service virtual port (for "
-                                         "client connections) [{}]: ".format(
-                                             self.args.service_virtual_port))
+            service_virtual_port = input(
+                f"Specify the service virtual port (for client connections) [{self.args.service_virtual_port}]: "
+            )
         service_virtual_port = service_virtual_port or self.args.service_virtual_port
 
         service_target = None
         if self.interactive:
             # In interactive mode, change default target to match the specified
             # virtual port
-            default_service_target = u'127.0.0.1:{}'.format(service_virtual_port)
-            service_target = input("Specify the service target IP and port (where "
-                                   "your service is listening) [{}]: ".format(
-                                       default_service_target))
+            default_service_target = f'127.0.0.1:{service_virtual_port}'
+            service_target = input(
+                f"Specify the service target IP and port (where your service is listening) [{default_service_target}]: "
+            )
             service_target = service_target or default_service_target
         service_target = service_target or self.args.service_target
-        torrc_port_line = u'HiddenServicePort {} {}'.format(service_virtual_port,
-                                                            service_target)
-        return torrc_port_line
+        return f'HiddenServicePort {service_virtual_port} {service_target}'
 
     def create_instances(self):
         if self.hs_version == 'v2':
@@ -336,7 +330,7 @@ class ConfigGenerator(object):
     def create_v2_instances(self):
         instances = []
 
-        for i in range(0, self.num_instances):
+        for _ in range(0, self.num_instances):
             instance_key = Cryptodome.PublicKey.RSA.generate(1024)
             instance_address = util.calc_onion_address(instance_key)
             logger.debug("Created a key for instance %s.onion.",
@@ -346,12 +340,10 @@ class ConfigGenerator(object):
         return instances
 
     def create_v3_instances(self):
-        instances = []
-
-        for i in range(0, self.num_instances):
-            instances.append(("<Enter the instance onion address here>", None))
-
-        return instances
+        return [
+            ("<Enter the instance onion address here>", None)
+            for _ in range(0, self.num_instances)
+        ]
 
     def get_master_key_passphrase(self):
         # Get optional passphrase for master key
@@ -366,8 +358,7 @@ class ConfigGenerator(object):
     def write_master_key_to_disk(self, onion_address, master_key):
         # Finished reading input, starting to write config files.
         util.try_make_dir(self.master_dir)
-        master_key_file = os.path.join(self.master_dir,
-                                       '{}.key'.format(onion_address))
+        master_key_file = os.path.join(self.master_dir, f'{onion_address}.key')
         with open(master_key_file, "wb") as key_file:
             os.chmod(master_key_file, 384)  # chmod 0600 in decimal
 
@@ -396,7 +387,7 @@ class ConfigGenerator(object):
         master_key, instances = list(self.services.values())[0]
         for i, (instance_address, instance_key) in enumerate(instances):
             # Create a numbered directory for instance
-            instance_dir = os.path.join(self.output_path, '{}{}'.format(self.tag, i + 1))
+            instance_dir = os.path.join(self.output_path, f'{self.tag}{i + 1}')
             instance_key_dir = os.path.join(instance_dir, instance_address)
             util.try_make_dir(instance_key_dir)
             os.chmod(instance_key_dir, 1472)  # chmod 2700 in decimal
@@ -417,9 +408,8 @@ class ConfigGenerator(object):
                 # The ./ relative path prevents Tor from raising relative
                 # path warnings. The relative path may need to be edited manual
                 # to work on Windows systems.
-                torrc_file.write(u"HiddenServiceDir {}\n".format(
-                    instance_address))
-                torrc_file.write(u"{}\n".format(self.torrc_port_line))
+                torrc_file.write(f"HiddenServiceDir {instance_address}\n")
+                torrc_file.write(f"{self.torrc_port_line}\n")
 
     def create_yaml_config_file(self):
         services_data = []
@@ -513,8 +503,11 @@ def parse_cmd_args():
 
     # .. todo:: Add option to specify HS host and port for instance torrc
 
-    parser.add_argument('--version', action='version',
-                        version='onionbalance %s' % onionbalance.__version__)
+    parser.add_argument(
+        '--version',
+        action='version',
+        version=f'onionbalance {onionbalance.__version__}',
+    )
 
     return parser
 
@@ -531,7 +524,7 @@ def main():
 
     # If CLI options have been provided, don't enter interactive mode
     # Crude check to see if any options beside --verbosity are set.
-    verbose = True if '-v' in sys.argv else False
+    verbose = '-v' in sys.argv
 
     if ((len(sys.argv) > 1 and not verbose) or len(sys.argv) > 3 or args.no_interactive):
         interactive = False

@@ -76,11 +76,8 @@ class TestHashRing(unittest.TestCase):
 
         responsible_hsdirs = hashring.get_responsible_hsdirs(previous_blinded_pubkey_bytes, True)
 
-        i = 0
-        for responsible_hsdir in responsible_hsdirs:
+        for i, responsible_hsdir in enumerate(responsible_hsdirs):
             self.assertEqual(responsible_hsdir.upper(), CORRECT_HSDIR_FPRS_FIRST_DESCRIPTOR[i])
-            i+=1
-
         print("===")
 
         # we need to use the new blinded key since this uses a new time period.........
@@ -89,10 +86,8 @@ class TestHashRing(unittest.TestCase):
 
         responsible_hsdirs = hashring.get_responsible_hsdirs(current_blinded_pubkey_bytes, False)
 
-        i = 0
-        for responsible_hsdir in responsible_hsdirs:
+        for i, responsible_hsdir in enumerate(responsible_hsdirs):
             self.assertEqual(responsible_hsdir.upper(), CORRECT_HSDIR_FPRS_SECOND_DESCRIPTOR[i])
-            i+=1
 
 if __name__ == '__main__':
     unittest.main()

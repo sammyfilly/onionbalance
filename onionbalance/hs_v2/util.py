@@ -15,8 +15,7 @@ def get_asn1_sequence(rsa_key):
     seq = Cryptodome.Util.asn1.DerSequence()
     seq.append(rsa_key.n)
     seq.append(rsa_key.e)
-    asn1_seq = seq.encode()
-    return asn1_seq
+    return seq.encode()
 
 
 def calc_key_digest(rsa_key):
@@ -40,7 +39,7 @@ def get_time_period(time, permanent_id):
     """
     time-period = (current-time + permanent-id-byte * 86400 / 256) / 86400
     """
-    permanent_id_byte = int(struct.unpack('B', permanent_id[0:1])[0])
+    permanent_id_byte = int(struct.unpack('B', permanent_id[:1])[0])
     return int((int(time) + permanent_id_byte * 86400 / 256) / 86400)
 
 
@@ -48,7 +47,7 @@ def get_seconds_valid(time, permanent_id):
     """
     Calculate seconds until the descriptor ID changes
     """
-    permanent_id_byte = int(struct.unpack('B', permanent_id[0:1])[0])
+    permanent_id_byte = int(struct.unpack('B', permanent_id[:1])[0])
     return 86400 - int((int(time) + permanent_id_byte * 86400 / 256) % 86400)
 
 
@@ -108,10 +107,11 @@ def key_decrypt_prompt(key_file, retries=3):
     with open(key_file, 'rt') as handle:
         pem_key = handle.read()
 
-        for retries in range(0, retries):
+        for _ in range(0, retries):
             if "Proc-Type: 4,ENCRYPTED" in pem_key:  # Key looks encrypted
                 key_passphrase = getpass.getpass(
-                    "Enter the password for the private key (%s): " % key_file)
+                    f"Enter the password for the private key ({key_file}): "
+                )
             try:
                 rsa_key = Cryptodome.PublicKey.RSA.importKey(
                     pem_key, passphrase=key_passphrase)
@@ -145,7 +145,4 @@ def is_directory_empty(path):
     """
     Check if a directory contains any files or directories.
     """
-    if os.listdir(path):
-        return False
-    else:
-        return True
+    return not os.listdir(path)

@@ -30,18 +30,15 @@ class StatusSocketHandler(BaseRequestHandler):
                 service_timestamp = service.uploaded.strftime(time_format)
             else:
                 service_timestamp = "[not uploaded]"
-            response.append("{}.onion {}".format(service.onion_address,
-                                                 service_timestamp))
+            response.append(f"{service.onion_address}.onion {service_timestamp}")
 
             for instance in service.instances:
                 if not instance.timestamp:
-                    response.append("  {}.onion [offline]".format(
-                        instance.onion_address))
+                    response.append(f"  {instance.onion_address}.onion [offline]")
                 else:
-                    response.append("  {}.onion {} {} IPs".format(
-                        instance.onion_address,
-                        instance.timestamp.strftime(time_format),
-                        len(instance.introduction_points)))
+                    response.append(
+                        f"  {instance.onion_address}.onion {instance.timestamp.strftime(time_format)} {len(instance.introduction_points)} IPs"
+                    )
         response.append("")
         self.request.sendall('\n'.join(response).encode('utf-8'))
 

@@ -226,15 +226,15 @@ class OnionbalanceService(object):
         # If descriptor not yet uploaded, do it now!
         if is_first_desc and not self.first_descriptor:
             return True
-        if not is_first_desc and not self.second_descriptor:
+        if is_first_desc or self.second_descriptor:
+            # OK this is not the first time we publish a descriptor. Check various
+            # parameters to see if we should try to publish again:
+            return any([self._intro_set_modified(is_first_desc),
+                        self._descriptor_has_expired(is_first_desc),
+                        self._hsdir_set_changed(is_first_desc),
+                        force_publish])
+        else:
             return True
-
-        # OK this is not the first time we publish a descriptor. Check various
-        # parameters to see if we should try to publish again:
-        return any([self._intro_set_modified(is_first_desc),
-                    self._descriptor_has_expired(is_first_desc),
-                    self._hsdir_set_changed(is_first_desc),
-                    force_publish])
 
     def get_all_intros_for_publish(self):
         """

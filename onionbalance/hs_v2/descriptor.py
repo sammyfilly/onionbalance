@@ -39,8 +39,7 @@ def generate_service_descriptor(permanent_key, introduction_point_list=None,
 
     if not introduction_point_list:
         onion_address = util.calc_onion_address(permanent_key)
-        raise ValueError("No introduction points for service %s.onion." %
-                         onion_address)
+        raise ValueError(f"No introduction points for service {onion_address}.onion.")
 
     # Generate the introduction point section of the descriptor
     intro_section = make_introduction_points_part(
@@ -55,8 +54,7 @@ def generate_service_descriptor(permanent_key, introduction_point_list=None,
         introduction_points_part=intro_section
     )
 
-    signed_descriptor = sign_descriptor(unsigned_descriptor, permanent_key)
-    return signed_descriptor
+    return sign_descriptor(unsigned_descriptor, permanent_key)
 
 
 def generate_hs_descriptor_raw(desc_id_base32, permanent_key_block,
@@ -66,20 +64,19 @@ def generate_hs_descriptor_raw(desc_id_base32, permanent_key_block,
     Generate hidden service descriptor string
     """
     doc = [
-        "rendezvous-service-descriptor {}".format(desc_id_base32),
+        f"rendezvous-service-descriptor {desc_id_base32}",
         "version 2",
         "permanent-key",
         permanent_key_block,
-        "secret-id-part {}".format(secret_id_part_base32),
-        "publication-time {}".format(publication_time),
+        f"secret-id-part {secret_id_part_base32}",
+        f"publication-time {publication_time}",
         "protocol-versions 2,3",
         "introduction-points",
         introduction_points_part,
         "signature\n",
     ]
 
-    unsigned_descriptor = '\n'.join(doc)
-    return unsigned_descriptor
+    return '\n'.join(doc)
 
 
 def make_introduction_points_part(introduction_point_list=None):
@@ -93,24 +90,28 @@ def make_introduction_points_part(introduction_point_list=None):
 
     intro = []
     for intro_point in introduction_point_list:
-        intro.append("introduction-point {}".format(intro_point.identifier))
-        intro.append("ip-address {}".format(intro_point.address))
-        intro.append("onion-port {}".format(intro_point.port))
-        intro.append("onion-key")
-        intro.append(intro_point.onion_key)
-        intro.append("service-key")
-        intro.append(intro_point.service_key)
-
+        intro.extend(
+            (
+                f"introduction-point {intro_point.identifier}",
+                f"ip-address {intro_point.address}",
+                f"onion-port {intro_point.port}",
+                "onion-key",
+                intro_point.onion_key,
+                "service-key",
+                intro_point.service_key,
+            )
+        )
     intro_section = '\n'.join(intro).encode('utf-8')
     intro_section_base64 = base64.b64encode(intro_section).decode('utf-8')
     intro_section_base64 = textwrap.fill(intro_section_base64, 64)
 
-    # Add the header and footer:
-    intro_points_with_headers = '\n'.join([
-        '-----BEGIN MESSAGE-----',
-        intro_section_base64,
-        '-----END MESSAGE-----'])
-    return intro_points_with_headers
+    return '\n'.join(
+        [
+            '-----BEGIN MESSAGE-----',
+            intro_section_base64,
+            '-----END MESSAGE-----',
+        ]
+    )
 
 
 def make_public_key_block(key):
@@ -121,12 +122,13 @@ def make_public_key_block(key):
     pub_base64 = base64.b64encode(asn1_pub).decode('utf-8')
     pub_base64 = textwrap.fill(pub_base64, 64)
 
-    # Add the header and footer:
-    pub_with_headers = '\n'.join([
-        '-----BEGIN RSA PUBLIC KEY-----',
-        pub_base64,
-        '-----END RSA PUBLIC KEY-----'])
-    return pub_with_headers
+    return '\n'.join(
+        [
+            '-----BEGIN RSA PUBLIC KEY-----',
+            pub_base64,
+            '-----END RSA PUBLIC KEY-----',
+        ]
+    )
 
 def pad_msg_with_tor_pkcs(msg_hash, emLen, with_hash_parameters=True):
     """
@@ -160,12 +162,13 @@ def sign(body, private_key):
     signature_base64 = base64.b64encode(signature_bytes).decode('utf-8')
     signature_base64 = textwrap.fill(signature_base64, 64)
 
-    # Add the header and footer:
-    signature_with_headers = '\n'.join([
-        '-----BEGIN SIGNATURE-----',
-        signature_base64,
-        '-----END SIGNATURE-----'])
-    return signature_with_headers
+    return '\n'.join(
+        [
+            '-----BEGIN SIGNATURE-----',
+            signature_base64,
+            '-----END SIGNATURE-----',
+        ]
+    )
 
 
 def sign_descriptor(descriptor, service_privkey):

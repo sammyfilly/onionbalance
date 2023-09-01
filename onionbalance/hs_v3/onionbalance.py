@@ -63,8 +63,10 @@ class Onionbalance(object):
     def initialize_services_from_config_data(self):
         services = []
         try:
-            for service in self.config_data['services']:
-                services.append(ob_service.OnionbalanceService(service, self.config_path))
+            services.extend(
+                ob_service.OnionbalanceService(service, self.config_path)
+                for service in self.config_data['services']
+            )
         except ob_service.BadServiceInit:
             sys.exit(1)
 
@@ -101,8 +103,9 @@ class Onionbalance(object):
                 try:
                     _ = HiddenServiceDescriptorV3.identity_key_from_address(instance["address"])
                 except ValueError:
-                    raise ConfigError("Cannot load instance with address: '{}'. If you are trying to run onionbalance "
-                                      "for v2 onions, please use the --hs-version=v2 switch".format(instance["address"]))
+                    raise ConfigError(
+                        f"""Cannot load instance with address: '{instance["address"]}'. If you are trying to run onionbalance for v2 onions, please use the --hs-version=v2 switch"""
+                    )
 
         return config_data
 
@@ -194,10 +197,9 @@ class Onionbalance(object):
         return False
 
     def _address_is_frontend(self, onion_address):
-        for service in self.services:
-            if service.has_onion_address(onion_address):
-                return True
-        return False
+        return any(
+            service.has_onion_address(onion_address) for service in self.services
+        )
 
     def handle_new_desc_event(self, desc_event):
         """
@@ -205,11 +207,7 @@ class Onionbalance(object):
         """
         action = desc_event.action
 
-        if action == "RECEIVED":
-            pass  # We already log in HS_DESC_CONTENT so no need to do it here too
-        elif action == "UPLOADED":
-            logger.debug("Successfully uploaded descriptor for %s to %s", desc_event.address, desc_event.directory)
-        elif action == "FAILED":
+        if action == "FAILED":
             if self._address_is_instance(desc_event.address):
                 logger.info("Descriptor fetch failed for instance %s from %s (%s)",
                             desc_event.address, desc_event.directory, desc_event.reason)
@@ -221,8 +219,8 @@ class Onionbalance(object):
                                desc_event.address, desc_event.directory, desc_event.reason)
         elif action == "REQUESTED":
             logger.debug("Requested descriptor for %s from %s...", desc_event.address, desc_event.directory)
-        else:
-            pass
+        elif action == "UPLOADED":
+            logger.debug("Successfully uploaded descriptor for %s to %s", desc_event.address, desc_event.directory)
 
     def reload_config(self):
         """

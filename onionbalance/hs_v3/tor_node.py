@@ -49,8 +49,8 @@ class Node(object):
         # See if this node can be an HSDir (it needs to be supported both in
         # protover and in flags)
         if 'HSDir' not in self.routerstatus.protocols or \
-           2 not in self.routerstatus.protocols['HSDir'] or \
-           'HSDir' not in self.routerstatus.flags:
+               2 not in self.routerstatus.protocols['HSDir'] or \
+               'HSDir' not in self.routerstatus.flags:
             raise NoHSDir
 
         # See if ed25519 identity is supported for this node
@@ -74,9 +74,7 @@ class Node(object):
                                      ed25519_node_identity,
                                      srv,
                                      period_num_int_8, period_length_int_8)
-        hsdir_index = hashlib.sha3_256(hash_body).digest()
-
-        return hsdir_index
+        return hashlib.sha3_256(hash_body).digest()
 
 
 class NoEd25519Identity(Exception):

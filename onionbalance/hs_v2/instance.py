@@ -74,7 +74,9 @@ class InstanceV2(onionbalance.common.instance.Instance):
         # If the new introduction points are different, flag this instance
         # as modified. Compare the set of introduction point identifiers
         # (fingerprint of the per IP circuit service key).
-        if (set(ip.identifier for ip in introduction_points) != set(ip.identifier for ip in self.introduction_points)):
+        if {ip.identifier for ip in introduction_points} != {
+            ip.identifier for ip in self.introduction_points
+        }:
             self.intro_set_changed_since_published = True
             self.introduction_points = introduction_points
             return True

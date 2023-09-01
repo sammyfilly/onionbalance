@@ -21,11 +21,10 @@ def upload_descriptor(controller, signed_descriptor, hsdirs=None, v3_onion_addre
 
     # Provide server fingerprints to control command if HSDirs are specified.
     if hsdirs:
-        server_args = ' '.join([("SERVER={}".format(hsdir))
-                                for hsdir in hsdirs])
+        server_args = ' '.join([f"SERVER={hsdir}" for hsdir in hsdirs])
 
     if v3_onion_address:
-        server_args += " HSADDRESS=%s" % v3_onion_address.replace(".onion", "")
+        server_args += f' HSADDRESS={v3_onion_address.replace(".onion", "")}'
 
     # Stem will insert the leading + and trailing '\r\n.\r\n'
     response = controller.msg("HSPOST %s\n%s" %

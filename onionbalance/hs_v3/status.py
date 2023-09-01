@@ -21,21 +21,30 @@ class StatusSocketHandlerMixin(object):
 
     def _outputString(self):
         time_format = "%Y-%m-%d %H:%M:%S"
-        response = {}
         services_data = []
         for service in self.balance.services:
             instances_data = []
             for instance in service.instances:
                 received = instance.descriptor.received_ts.strftime(time_format) \
-                    if instance.descriptor else None
+                        if instance.descriptor else None
                 if not instance.intro_set_modified_timestamp:
-                    instances_data.append({'onionAddress': instance.onion_address + '.onion',
-                                           'received': received})
+                    instances_data.append(
+                        {
+                            'onionAddress': f'{instance.onion_address}.onion',
+                            'received': received,
+                        }
+                    )
                 else:
-                    instances_data.append({'onionAddress': instance.onion_address + '.onion',
-                                           'introSetModified': instance.intro_set_modified_timestamp.strftime(time_format),
-                                           'introPointsNum': len(instance.descriptor.intro_set),
-                                           'descriptorReceived': received})
+                    instances_data.append(
+                        {
+                            'onionAddress': f'{instance.onion_address}.onion',
+                            'introSetModified': instance.intro_set_modified_timestamp.strftime(
+                                time_format
+                            ),
+                            'introPointsNum': len(instance.descriptor.intro_set),
+                            'descriptorReceived': received,
+                        }
+                    )
             if service.first_descriptor:
                 last_attempt_first = service.first_descriptor.last_publish_attempt_ts.strftime(time_format)
             else:
@@ -49,7 +58,7 @@ class StatusSocketHandlerMixin(object):
                                   'publishAttemptFirstDescriptor': last_attempt_first,
                                   'publishAttemptSecondDescriptor': last_attempt_second,
                                   'instances': instances_data})
-        response['services'] = services_data
+        response = {'services': services_data}
         return json.dumps(response, sort_keys=True)
 
 

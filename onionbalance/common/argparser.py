@@ -39,8 +39,11 @@ def get_common_argparser():
                              "in ascending order: debug, info, warning, "
                              "error, critical).  The default is info.")
 
-    parser.add_argument('--version', action='version',
-                        version='onionbalance %s' % onionbalance.__version__)
+    parser.add_argument(
+        '--version',
+        action='version',
+        version=f'onionbalance {onionbalance.__version__}',
+    )
 
     parser.add_argument("--is-testnet", action='store_true',
                         help="Is this onionbalance on a test net? (Default: no)")

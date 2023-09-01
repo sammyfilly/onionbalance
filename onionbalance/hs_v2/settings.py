@@ -74,24 +74,22 @@ def initialize_services(controller, services_config):
             logger.debug("Loaded private key for service %s.onion.",
                          onion_address)
 
-        # Load all instances for the current onion service
-        instance_config = service.get("instances", [])
-        if not instance_config:
-            logger.error("Could not load any instances for service "
-                         "%s.onion.", onion_address)
-            sys.exit(1)
-        else:
-            instances = []
-            for instance in instance_config:
-                instances.append(onionbalance.hs_v2.instance.InstanceV2(
+        if instance_config := service.get("instances", []):
+            instances = [
+                onionbalance.hs_v2.instance.InstanceV2(
                     controller=controller,
                     onion_address=instance.get("address"),
-                    authentication_cookie=instance.get("auth")
-                ))
-
+                    authentication_cookie=instance.get("auth"),
+                )
+                for instance in instance_config
+            ]
             logger.info("Loaded %d instances for service %s.onion.",
                         len(instances), onion_address)
 
+        else:
+            logger.error("Could not load any instances for service "
+                         "%s.onion.", onion_address)
+            sys.exit(1)
         # Store service configuration in config.services global
         config.services.append(onionbalance.hs_v2.service.Service(
             controller=controller,

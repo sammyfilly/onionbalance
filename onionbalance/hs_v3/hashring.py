@@ -66,15 +66,14 @@ def get_srv_and_time_period(is_first_descriptor):
             srv = my_onionbalance.consensus.get_previous_srv(current_tp)
             tp = current_tp
             _case = 2  # just for debugging
+    elif _time_between_tp_and_srv(valid_after):
+        srv = my_onionbalance.consensus.get_current_srv(current_tp)
+        tp = current_tp
+        _case = 3  # just for debugging
     else:
-        if _time_between_tp_and_srv(valid_after):
-            srv = my_onionbalance.consensus.get_current_srv(current_tp)
-            tp = current_tp
-            _case = 3  # just for debugging
-        else:
-            srv = my_onionbalance.consensus.get_current_srv(next_tp)
-            tp = next_tp
-            _case = 4  # just for debugging
+        srv = my_onionbalance.consensus.get_current_srv(next_tp)
+        tp = next_tp
+        _case = 4  # just for debugging
 
     srv_b64 = base64.b64encode(srv) if srv else None
     logger.debug("For valid_after %s we got SRV %s and TP %s (case: #%d)",
@@ -135,9 +134,7 @@ def _get_hidden_service_index(blinded_pubkey, replica_num, is_first_descriptor):
                                  period_length_int_8,
                                  period_num_int_8)
 
-    hs_index = hashlib.sha3_256(hash_body).digest()
-
-    return hs_index
+    return hashlib.sha3_256(hash_body).digest()
 
 
 def get_responsible_hsdirs(blinded_pubkey, is_first_descriptor):
@@ -212,10 +209,9 @@ def get_responsible_hsdirs(blinded_pubkey, is_first_descriptor):
     if my_onionbalance.is_testnet:
         # If we are on chutney it's normal to not have enough nodes to populate the hashring
         assert(len(responsible_hsdirs) <= params.HSDIR_N_REPLICAS * params.HSDIR_SPREAD_STORE)
-    else:
-        if (len(responsible_hsdirs) != params.HSDIR_N_REPLICAS * params.HSDIR_SPREAD_STORE):
-            logger.critical("Got the wrong number of responsible HSDirs: %d. Aborting", len(responsible_hsdirs))
-            raise EmptyHashRing
+    elif (len(responsible_hsdirs) != params.HSDIR_N_REPLICAS * params.HSDIR_SPREAD_STORE):
+        logger.critical("Got the wrong number of responsible HSDirs: %d. Aborting", len(responsible_hsdirs))
+        raise EmptyHashRing
 
     return responsible_hsdirs
 
