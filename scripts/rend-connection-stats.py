@@ -80,8 +80,8 @@ def parse_cmd_args():
     """
 
     parser = argparse.ArgumentParser(
-        description="%s logs stats about Tor rendezvous circuits" %
-        sys.argv[0])
+        description=f"{sys.argv[0]} logs stats about Tor rendezvous circuits"
+    )
 
     parser.add_argument("-i", "--ip", type=str, default="127.0.0.1",
                         help="Tor controller IP address")

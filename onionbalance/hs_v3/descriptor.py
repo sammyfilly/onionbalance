@@ -59,8 +59,8 @@ class IntroductionPointSetV3(intro_point_set.IntroductionPointSet):
         """
         # XXX we are currently using onion_key_raw as the identifier for the
         # intro point. is there a better thing to use?
-        intro_set_1 = set(ip.onion_key_raw for ip in other.get_intro_points_flat())
-        intro_set_2 = set(ip.onion_key_raw for ip in self.get_intro_points_flat())
+        intro_set_1 = {ip.onion_key_raw for ip in other.get_intro_points_flat()}
+        intro_set_2 = {ip.onion_key_raw for ip in self.get_intro_points_flat()}
 
         # TODO: unittests
         return intro_set_1 == intro_set_2
@@ -126,11 +126,10 @@ class OBDescriptor(V3Descriptor):
         # Start generating descriptor
         desc_signing_key = Ed25519PrivateKey.generate()
 
-        # Get the intro points for this descriptor and recertify them!
-        recertified_intro_points = []
-        for ip in intro_points:
-            recertified_intro_points.append(self._recertify_intro_point(ip, desc_signing_key))
-
+        recertified_intro_points = [
+            self._recertify_intro_point(ip, desc_signing_key)
+            for ip in intro_points
+        ]
         rev_counter = self._get_revision_counter(identity_priv_key, is_first_desc)
 
         v3_desc_inner_layer = InnerLayer.create(introduction_points=recertified_intro_points)
@@ -180,17 +179,14 @@ class OBDescriptor(V3Descriptor):
         # unparseable descriptors if we don't recertify them (and we won't).
         assert(not intro_point.legacy_key_cert)
 
-        # Get all the certs we need to recertify
-        # [we need to use the _replace method of namedtuples because there is no
-        # setter for those attributes due to the way stem sets those fields. If we
-        # attempt to normally replace the attributes we get the following
-        # exception: AttributeError: can't set attribute]
-        recertified_intro_point = intro_point._replace(auth_key_cert=self._recertify_ed_certificate(original_auth_key_cert,
-                                                                                                    descriptor_signing_key),
-                                                       enc_key_cert=self._recertify_ed_certificate(original_enc_key_cert,
-                                                                                                   descriptor_signing_key))
-
-        return recertified_intro_point
+        return intro_point._replace(
+            auth_key_cert=self._recertify_ed_certificate(
+                original_auth_key_cert, descriptor_signing_key
+            ),
+            enc_key_cert=self._recertify_ed_certificate(
+                original_enc_key_cert, descriptor_signing_key
+            ),
+        )
 
     def _recertify_ed_certificate(self, ed_cert, descriptor_signing_key):
         """
@@ -204,14 +200,14 @@ class OBDescriptor(V3Descriptor):
         """
         # pylint: disable=no-member
         extensions = [Ed25519Extension(ExtensionType.HAS_SIGNING_KEY, None, stem.util._pubkey_bytes(descriptor_signing_key))]
-        new_cert = Ed25519CertificateV1(cert_type=ed_cert.type,
-                                        expiration=ed_cert.expiration,
-                                        key_type=ed_cert.key_type,
-                                        key=ed_cert.key,
-                                        extensions=extensions,
-                                        signing_key=descriptor_signing_key)
-
-        return new_cert
+        return Ed25519CertificateV1(
+            cert_type=ed_cert.type,
+            expiration=ed_cert.expiration,
+            key_type=ed_cert.key_type,
+            key=ed_cert.key,
+            extensions=extensions,
+            signing_key=descriptor_signing_key,
+        )
 
     def _get_revision_counter(self, identity_priv_key, is_first_desc):
         """
@@ -298,10 +294,7 @@ class ReceivedDescriptor(V3Descriptor):
         else:
             too_old_threshold = params.INSTANCE_DESCRIPTOR_TOO_OLD
 
-        if received_age > too_old_threshold:
-            return True
-
-        return False
+        return received_age > too_old_threshold
 
 
 class BadDescriptor(Exception):

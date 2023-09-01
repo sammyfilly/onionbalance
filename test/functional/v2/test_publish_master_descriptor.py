@@ -56,9 +56,9 @@ def test_master_descriptor_publication(tmpdir):
 
     # Try fetch and validate the descriptor with stem
     with stem.control.Controller.from_port(
-        address=chutney_config.get('client_ip'),
-        port=chutney_config.get('control_port')
-    ) as controller:
+            address=chutney_config.get('client_ip'),
+            port=chutney_config.get('control_port')
+        ) as controller:
         controller.authenticate()
 
         # get_hidden_service_descriptor() will raise exceptions if it
@@ -74,8 +74,9 @@ def test_master_descriptor_publication(tmpdir):
             instance_ips = instance_descriptor.introduction_points()
 
             # Check if all instance IPs were included in the master descriptor
-            assert (set(ip.identifier for ip in instance_ips) ==
-                    set(ip.identifier for ip in master_ips))
+            assert {ip.identifier for ip in instance_ips} == {
+                ip.identifier for ip in master_ips
+            }
 
     # Check that the control socket was created
     socket_path = tmpdir.join('control')
@@ -88,10 +89,10 @@ def test_master_descriptor_publication(tmpdir):
     # Read the data from the status socket
     result = []
     while True:
-        data = sock_client.recv(1024)
-        if not data:
+        if data := sock_client.recv(1024):
+            result.append(data.decode('utf-8'))
+        else:
             break
-        result.append(data.decode('utf-8'))
     result_data = ''.join(result)
 
     # Check each instance is in the output

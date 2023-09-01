@@ -19,25 +19,25 @@ def onionbalance_config_interact(cli, cli_input):
     cli.send("v2\n")
 
     cli.expect(u"store generated config")
-    cli.send("{}\n".format(cli_input.get('config_dir', u'')))
+    cli.send(f"{cli_input.get('config_dir', '')}\n")
 
     cli.expect(u"path to master service private key")
-    cli.send(u"{}\n".format(cli_input.get('private_key_path', u'')))
+    cli.send(f"{cli_input.get('private_key_path', '')}\n")
 
     cli.expect(u"Number of instance services")
-    cli.send(u"{}\n".format(cli_input.get('num_instances', u'')))
+    cli.send(f"{cli_input.get('num_instances', '')}\n")
 
     cli.expect(u"Provide a tag name")
-    cli.send(u"{}\n".format(cli_input.get('tag_name', u'')))
+    cli.send(f"{cli_input.get('tag_name', '')}\n")
 
     cli.expect(u"service virtual port")
-    cli.send(u"{}\n".format(cli_input.get('virtual_port', u'')))
+    cli.send(f"{cli_input.get('virtual_port', '')}\n")
 
     cli.expect(u"service target IP and port")
-    cli.send(u"{}\n".format(cli_input.get('target_ip', u'')))
+    cli.send(f"{cli_input.get('target_ip', '')}\n")
 
     cli.expect(u"optional password")
-    cli.send(u"{}\n".format(cli_input.get('password', u'')))
+    cli.send(f"{cli_input.get('password', '')}\n")
 
     return None
 

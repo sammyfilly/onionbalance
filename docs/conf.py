@@ -186,12 +186,20 @@ htmlhelp_basename = 'onionbalancedoc'
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('running-onionbalance', 'onionbalance',
-      'a Tor onion service load balancer',
-     ['%s <%s>' % (__author__, __contact__)], 1),
-    ('onionbalance-config', 'onionbalance-config',
-      'tool for generating onionbalance config files and keys',
-     ['%s <%s>' % (__author__, __contact__)], 1),
+    (
+        'running-onionbalance',
+        'onionbalance',
+        'a Tor onion service load balancer',
+        [f'{__author__} <{__contact__}>'],
+        1,
+    ),
+    (
+        'onionbalance-config',
+        'onionbalance-config',
+        'tool for generating onionbalance config files and keys',
+        [f'{__author__} <{__contact__}>'],
+        1,
+    ),
 ]
 
 # If true, show URL addresses after external links.

@@ -80,10 +80,7 @@ class Service(object):
             return True
 
         descriptor_age = (datetime.datetime.utcnow() - self.uploaded)
-        if (descriptor_age.total_seconds() > config.DESCRIPTOR_UPLOAD_PERIOD):
-            return True
-        else:
-            return False
+        return descriptor_age.total_seconds() > config.DESCRIPTOR_UPLOAD_PERIOD
 
     def _descriptor_id_changing_soon(self):
         """
@@ -93,10 +90,7 @@ class Service(object):
         seconds_valid = util.get_seconds_valid(time.time(), permanent_id)
 
         # Check if descriptor ID will be changing within the overlap period.
-        if seconds_valid < config.DESCRIPTOR_OVERLAP_PERIOD:
-            return True
-        else:
-            return False
+        return seconds_valid < config.DESCRIPTOR_OVERLAP_PERIOD
 
     def _select_introduction_points(self):
         """

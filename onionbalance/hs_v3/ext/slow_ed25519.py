@@ -58,13 +58,19 @@ def scalarmult(P,e):
 
 def encodeint(y):
   bits = [(y >> i) & 1 for i in range(b)]
-  return b''.join([bytes([sum([bits[i * 8 + j] << j for j in range(8)])]) for i in range(b//8)])
+  return b''.join([
+      bytes([sum(bits[i * 8 + j] << j for j in range(8))])
+      for i in range(b // 8)
+  ])
 
 def encodepoint(P):
   x = P[0]
   y = P[1]
   bits = [(y >> i) & 1 for i in range(b - 1)] + [x & 1]
-  return b''.join([bytes([sum([bits[i * 8 + j] << j for j in range(8)])]) for i in range(b//8)])
+  return b''.join([
+      bytes([sum(bits[i * 8 + j] << j for j in range(8))])
+      for i in range(b // 8)
+  ])
 
 def bit(h,i):
   return (h[i//8] >> (i%8)) & 1
@@ -106,7 +112,7 @@ def decodepoint(s):
 def checkvalid(s,m,pk):
   if len(s) != b//4: raise Exception("signature length is wrong")
   if len(pk) != b//8: raise Exception("public-key length is wrong")
-  R = decodepoint(s[0:b//8])
+  R = decodepoint(s[:b//8])
   A = decodepoint(pk)
   S = decodeint(s[b//8:b//4])
   h = Hint(encodepoint(R) + pk + m)

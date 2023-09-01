@@ -36,11 +36,13 @@ def refresh_consensus():
     # Retrieve the current set of hidden service directories
     hsdirs = []
     try:
-        for desc in controller.get_network_statuses():
-            if stem.Flag.HSDIR in desc.flags:
-                hsdirs.append(desc.fingerprint)
+        hsdirs.extend(
+            desc.fingerprint
+            for desc in controller.get_network_statuses()
+            if stem.Flag.HSDIR in desc.flags
+        )
     except IOError as err:
-        logger.error("Could not load consensus from Tor: %s" % err)
+        logger.error(f"Could not load consensus from Tor: {err}")
     else:
         HSDIR_LIST = hsdirs
         logger.debug("Updated the list of Tor hidden service directories.")

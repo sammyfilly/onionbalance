@@ -94,12 +94,7 @@ class Consensus(object):
             logger.warning("Can't get microdescriptors from Tor. Delaying...")
             return
 
-        # Turn the mds into a dictionary indexed by the digest as an
-        # optimization while matching them with routerstatuses.
-        microdescriptors_dict = {}
-        for md in microdescriptors_list:
-            microdescriptors_dict[md.digest()] = md
-
+        microdescriptors_dict = {md.digest(): md for md in microdescriptors_list}
         # Go through the routerstatuses and match them up with
         # microdescriptors, and create a Node object for each match. If there
         # is no match we don't register it as a node.
@@ -156,23 +151,14 @@ class Consensus(object):
         # on how big the voting rounds are which differs between live and
         # testing network:
         from onionbalance.hs_v3.onionbalance import my_onionbalance
-        if my_onionbalance.is_testnet:
-            return (12 * 20) // 60
-        else:
-            return 12 * 60
+        return (12 * 20) // 60 if my_onionbalance.is_testnet else 12 * 60
 
     def get_time_period_length(self):
         """
         Get the HSv3 time period length in minutes
         """
         from onionbalance.hs_v3.onionbalance import my_onionbalance
-        if my_onionbalance.is_testnet:
-            # This is a chutney network! Use hs_common.c:get_time_period_length()
-            # logic to calculate time period length
-            return (24 * 20) // 60
-        else:
-            # This is not a chutney network, so time period length is 1440 minutes (24 hours)
-            return 24 * 60
+        return (24 * 20) // 60 if my_onionbalance.is_testnet else 24 * 60
 
     def get_blinding_param(self, identity_pubkey, time_period_number):
         """
@@ -241,11 +227,7 @@ class Consensus(object):
         beginning_of_current_round = stem.util.datetime_to_unix(self.consensus.valid_after)
 
         # Voting interval is 20 secs in chutney and one hour in real network
-        if my_onionbalance.is_testnet:
-            voting_interval_secs = 20
-        else:
-            voting_interval_secs = 60 * 60
-
+        voting_interval_secs = 20 if my_onionbalance.is_testnet else 60 * 60
         # Get current SR protocol round (an SR protocol run has 24 rounds)
         curr_round_slot = (beginning_of_current_round // voting_interval_secs) % 24
         time_elapsed_since_start_of_run = curr_round_slot * voting_interval_secs

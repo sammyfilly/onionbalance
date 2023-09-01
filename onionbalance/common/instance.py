@@ -22,7 +22,6 @@ def helper_fetch_all_instance_descriptors(controller, instances, control_passwor
             # the NEWNYM singal
             controller.signal(stem.control.Signal.NEWNYM)
             time.sleep(5)  # Sleep to allow Tor time to build new circuits
-            pass
         except stem.SocketClosed:
             logger.error("Failed to send NEWNYM signal, socket is closed.")
             onionbalance.common.util.reauthenticate(controller, logger, control_password)

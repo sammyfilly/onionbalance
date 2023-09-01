@@ -66,8 +66,10 @@ def create_test_config_file_v2(tmppath, private_key=None, instances=None):
     assert key_path.check()
 
     # Create YAML Onionbalance settings file for these instances
-    service_data = {'key': str(key_path)}
-    service_data['instances'] = [{'address': addr[:16]} for addr in instances]
+    service_data = {
+        'key': str(key_path),
+        'instances': [{'address': addr[:16]} for addr in instances],
+    }
     settings_data = {
         'services': [service_data],
         'STATUS_SOCKET_LOCATION': str(tmppath.join('control')),
@@ -126,4 +128,4 @@ def random_onionv3_address():
     print(onionAddressBytes)
     onionAddress = base64.b32encode(onionAddressBytes).lower().decode('utf-8')
 
-    return onionAddress + '.onion'
+    return f'{onionAddress}.onion'
